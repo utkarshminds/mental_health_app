@@ -1,13 +1,17 @@
 package com.example.utkarsh
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.utkarsh.ui.login.LoginScreen
+import com.example.utkarsh.ui.login.SignupScreen
+import com.example.utkarsh.ui.login.ForgotPasswordScreen
 import com.example.utkarsh.ui.splash.SplashScreen
 
 class MainActivity : ComponentActivity() {
@@ -22,6 +26,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun UtkarshApp() {
     val navController = rememberNavController()
+    val context = LocalContext.current
 
     NavHost(
         navController = navController,
@@ -30,13 +35,25 @@ fun UtkarshApp() {
         composable("splash") {
             SplashScreen(onTimeout = {
                 navController.navigate("login") {
-                    // Pop splash off the backstack so it doesn't show when pressing back
                     popUpTo("splash") { inclusive = true }
                 }
             })
         }
         composable("login") {
-            LoginScreen()
+            LoginScreen(
+                onNavigateToSignup = { navController.navigate("signup") },
+                onNavigateToForgotPassword = { navController.navigate("forgot_password") },
+                onLoginSuccess = {
+                    Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
+                    // Navigate to home screen here in future
+                }
+            )
+        }
+        composable("signup") {
+            SignupScreen(onBackToLogin = { navController.popBackStack() })
+        }
+        composable("forgot_password") {
+            ForgotPasswordScreen(onBackToLogin = { navController.popBackStack() })
         }
     }
 }

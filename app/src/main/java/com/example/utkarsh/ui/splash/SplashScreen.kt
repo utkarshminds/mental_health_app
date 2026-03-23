@@ -1,8 +1,11 @@
 package com.example.utkarsh.ui.splash
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -10,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -17,37 +21,87 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(onTimeout: () -> Unit) {
-    // Navigate after a delay (e.g., 2 seconds)
     LaunchedEffect(Unit) {
-        delay(2000L)
+        delay(4000L) // 4 seconds to see the puzzle
         onTimeout()
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary),
-        contentAlignment = Alignment.Center
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = Color(0xFFEEEEEE)
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            // Marathi Name: उत्कर्ष
-            Text(
-                text = "उत्कर्ष",
-                fontSize = 64.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = "Utkarsh",
-                fontSize = 20.sp,
-                color = Color.White.copy(alpha = 0.8f),
-                letterSpacing = 4.sp
-            )
+            CrosswordGrid()
+        }
+    }
+}
+
+@Composable
+fun CrosswordGrid() {
+    val cellSize = 38.dp
+    val utkarsh = "UTKARSH"
+    val utkarshRow = 5
+    val utkarshStartCol = 1
+
+    val gridItems = mutableListOf<GridItemData>()
+
+    // 1. Add UTKARSH (Horizontal)
+    utkarsh.forEachIndexed { index, char ->
+        gridItems.add(GridItemData(char, utkarshRow, utkarshStartCol + index, true))
+    }
+
+    // 2. Add Vertical Intersecting Words
+    addVerticalWord(gridItems, "TRUST", utkarshStartCol + 0, 2, utkarshRow)
+    addVerticalWord(gridItems, "GRATITUDE", utkarshStartCol + 1, 3, utkarshRow)
+    addVerticalWord(gridItems, "KINDNESS", utkarshStartCol + 2, 0, utkarshRow)
+    addVerticalWord(gridItems, "CALM", utkarshStartCol + 3, 1, utkarshRow)
+    addVerticalWord(gridItems, "CARE", utkarshStartCol + 4, 2, utkarshRow)
+    addVerticalWord(gridItems, "BLISS", utkarshStartCol + 5, 3, utkarshRow)
+    addVerticalWord(gridItems, "HOPE", utkarshStartCol + 6, 0, utkarshRow)
+
+    // Render the grid
+    Box(modifier = Modifier.size(cellSize * 10, cellSize * 12)) {
+        for (item in gridItems) {
+            val cellModifier = Modifier
+                .offset(x = (item.col * 38).dp, y = (item.row * 38).dp)
+                .size(36.dp)
+                .background(
+                    if (item.isUtkarsh) MaterialTheme.colorScheme.primary else Color.White,
+                    shape = RoundedCornerShape(4.dp)
+                )
+                .border(
+                    width = 1.dp,
+                    color = if (item.isUtkarsh) Color.Transparent else Color.LightGray,
+                    shape = RoundedCornerShape(4.dp)
+                )
+
+            Box(
+                modifier = cellModifier,
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = item.char.toString(),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (item.isUtkarsh) Color.White else Color.Black,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+data class GridItemData(val char: Char, val row: Int, val col: Int, val isUtkarsh: Boolean)
+
+fun addVerticalWord(list: MutableList<GridItemData>, word: String, col: Int, intersectIndex: Int, intersectRow: Int) {
+    val startRow = intersectRow - intersectIndex
+    word.forEachIndexed { index, char ->
+        val row = startRow + index
+        if (!list.any { it.row == row && it.col == col }) {
+            list.add(GridItemData(char, row, col, false))
         }
     }
 }
