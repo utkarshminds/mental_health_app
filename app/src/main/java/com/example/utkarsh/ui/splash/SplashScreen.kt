@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import kotlin.math.min
 
 @Composable
 fun SplashScreen(onTimeout: () -> Unit) {
@@ -30,21 +31,30 @@ fun SplashScreen(onTimeout: () -> Unit) {
         modifier = Modifier.fillMaxSize(),
         color = Color(0xFFEEEEEE)
     ) {
-        Box(
+        BoxWithConstraints(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            CrosswordGrid()
+            // Further optimized grid size to make it even bigger
+            // We'll use 8x12 grid bounds for maximum screen utilization
+            val gridWidth = 8
+            val gridHeight = 12
+            
+            val cellWidth = maxWidth / gridWidth
+            val cellHeight = maxHeight / gridHeight
+            val cellSize = min(cellWidth.value, cellHeight.value).dp
+
+            CrosswordGrid(cellSize)
         }
     }
 }
 
 @Composable
-fun CrosswordGrid() {
-    val cellSize = 38.dp
+fun CrosswordGrid(cellSize: androidx.compose.ui.unit.Dp) {
     val utkarsh = "UTKARSH"
+    // Center UTKARSH at Row 5, Col 0 (adjusted for larger display)
     val utkarshRow = 5
-    val utkarshStartCol = 1
+    val utkarshStartCol = 0
 
     val gridItems = mutableListOf<GridItemData>()
 
@@ -62,20 +72,20 @@ fun CrosswordGrid() {
     addVerticalWord(gridItems, "BLISS", utkarshStartCol + 5, 3, utkarshRow)
     addVerticalWord(gridItems, "HOPE", utkarshStartCol + 6, 0, utkarshRow)
 
-    // Render the grid
-    Box(modifier = Modifier.size(cellSize * 10, cellSize * 12)) {
+    // Center the grid within its own box
+    Box(modifier = Modifier.size(cellSize * 8, cellSize * 12)) {
         for (item in gridItems) {
             val cellModifier = Modifier
-                .offset(x = (item.col * 38).dp, y = (item.row * 38).dp)
-                .size(36.dp)
+                .offset(x = (item.col * cellSize.value).dp, y = (item.row * cellSize.value).dp)
+                .size(cellSize - 1.dp) // Thinner gap for bigger appearance
                 .background(
                     if (item.isUtkarsh) MaterialTheme.colorScheme.primary else Color.White,
-                    shape = RoundedCornerShape(4.dp)
+                    shape = RoundedCornerShape(2.dp)
                 )
                 .border(
-                    width = 1.dp,
+                    width = 0.5.dp, // Thinner border for a cleaner, larger look
                     color = if (item.isUtkarsh) Color.Transparent else Color.LightGray,
-                    shape = RoundedCornerShape(4.dp)
+                    shape = RoundedCornerShape(2.dp)
                 )
 
             Box(
@@ -84,8 +94,8 @@ fun CrosswordGrid() {
             ) {
                 Text(
                     text = item.char.toString(),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontSize = (cellSize.value * 0.6).sp, // Increased font size relative to cell
+                    fontWeight = FontWeight.ExtraBold,
                     color = if (item.isUtkarsh) Color.White else Color.Black,
                     textAlign = TextAlign.Center
                 )
