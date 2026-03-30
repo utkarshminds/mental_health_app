@@ -64,7 +64,7 @@ fun CrosswordGrid(cellSize: androidx.compose.ui.unit.Dp) {
     }
 
     // 2. Add Vertical Intersecting Words
-    addVerticalWord(gridItems, "TRUST", utkarshStartCol + 0, 2, utkarshRow)
+    addVerticalWord(gridItems, "TRUST", utkarshStartCol, 2, utkarshRow)
     addVerticalWord(gridItems, "GRATITUDE", utkarshStartCol + 1, 3, utkarshRow)
     addVerticalWord(gridItems, "KINDNESS", utkarshStartCol + 2, 0, utkarshRow)
     addVerticalWord(gridItems, "CALM", utkarshStartCol + 3, 1, utkarshRow)
