@@ -17,7 +17,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
+import com.example.utkarsh.auth.AuthManager
 
 @Composable
 fun LoginScreen(
@@ -28,7 +28,9 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val authManager = remember { AuthManager() }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -72,10 +74,11 @@ fun LoginScreen(
                     email = it
                     errorMessage = null
                 },
-                label = { Text("Email or Username") },
+                label = { Text("Email") },
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                enabled = !isLoading
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -92,7 +95,8 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true
+                singleLine = true,
+                enabled = !isLoading
             )
 
             // Forgot Password
@@ -100,7 +104,7 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                TextButton(onClick = onNavigateToForgotPassword) {
+                TextButton(onClick = onNavigateToForgotPassword, enabled = !isLoading) {
                     Text("Forgot Password?")
                 }
             }
@@ -110,18 +114,31 @@ fun LoginScreen(
             // Login Button
             Button(
                 onClick = { 
-                    if (email == "nerurkar" && password == "test123!@") {
-                        onLoginSuccess()
-                    } else {
-                        errorMessage = "Invalid username or password"
+                    isLoading = true
+                    authManager.signIn(email, password) { success, error ->
+                        isLoading = false
+                        if (success) {
+                            onLoginSuccess()
+                        } else {
+                            errorMessage = error
+                        }
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                shape = MaterialTheme.shapes.medium
+                shape = MaterialTheme.shapes.medium,
+                enabled = !isLoading
             ) {
-                Text("Login", fontSize = 18.sp)
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Login", fontSize = 18.sp)
+                }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -131,14 +148,14 @@ fun LoginScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Divider(modifier = Modifier.weight(1f))
+                HorizontalDivider(modifier = Modifier.weight(1f))
                 Text(
                     text = " OR ",
                     modifier = Modifier.padding(horizontal = 16.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Gray
                 )
-                Divider(modifier = Modifier.weight(1f))
+                HorizontalDivider(modifier = Modifier.weight(1f))
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -149,16 +166,18 @@ fun LoginScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 OutlinedButton(
-                    onClick = { Toast.makeText(context, "Coming soon!", Toast.LENGTH_SHORT).show() },
+                    onClick = { Toast.makeText(context, "Google Sign-In integration in progress", Toast.LENGTH_SHORT).show() },
                     modifier = Modifier.weight(1f),
-                    shape = MaterialTheme.shapes.medium
+                    shape = MaterialTheme.shapes.medium,
+                    enabled = !isLoading
                 ) {
                     Text("Google")
                 }
                 OutlinedButton(
                     onClick = { Toast.makeText(context, "Coming soon!", Toast.LENGTH_SHORT).show() },
                     modifier = Modifier.weight(1f),
-                    shape = MaterialTheme.shapes.medium
+                    shape = MaterialTheme.shapes.medium,
+                    enabled = !isLoading
                 ) {
                     Text("Facebook")
                 }
@@ -171,7 +190,7 @@ fun LoginScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("Don't have an account?")
-                TextButton(onClick = onNavigateToSignup) {
+                TextButton(onClick = onNavigateToSignup, enabled = !isLoading) {
                     Text("Sign Up", fontWeight = FontWeight.Bold)
                 }
             }

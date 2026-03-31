@@ -18,6 +18,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.utkarsh.auth.AuthManager
 
 @Composable
 fun SignupScreen(onBackToLogin: () -> Unit) {
@@ -25,7 +26,11 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    
     val context = LocalContext.current
+    val authManager = remember { AuthManager() }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -47,13 +52,22 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            if (errorMessage != null) {
+                Text(
+                    text = errorMessage!!,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
+
             OutlinedTextField(
                 value = fullName,
                 onValueChange = { fullName = it },
                 label = { Text("Full Name") },
                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                enabled = !isLoading
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -65,7 +79,8 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                singleLine = true
+                singleLine = true,
+                enabled = !isLoading
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -78,7 +93,8 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true
+                singleLine = true,
+                enabled = !isLoading
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -91,21 +107,44 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true
+                singleLine = true,
+                enabled = !isLoading
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
                 onClick = { 
-                    Toast.makeText(context, "Registration feature coming soon!", Toast.LENGTH_SHORT).show()
+                    if (password != confirmPassword) {
+                        errorMessage = "Passwords do not match"
+                        return@Button
+                    }
+                    isLoading = true
+                    authManager.signUp(email, password) { success, error ->
+                        isLoading = false
+                        if (success) {
+                            Toast.makeText(context, "Account created successfully!", Toast.LENGTH_SHORT).show()
+                            onBackToLogin()
+                        } else {
+                            errorMessage = error
+                        }
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                shape = MaterialTheme.shapes.medium
+                shape = MaterialTheme.shapes.medium,
+                enabled = !isLoading
             ) {
-                Text("Sign Up", fontSize = 18.sp)
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Sign Up", fontSize = 18.sp)
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -115,14 +154,14 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Divider(modifier = Modifier.weight(1f))
+                HorizontalDivider(modifier = Modifier.weight(1f))
                 Text(
                     text = " OR ",
                     modifier = Modifier.padding(horizontal = 16.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Gray
                 )
-                Divider(modifier = Modifier.weight(1f))
+                HorizontalDivider(modifier = Modifier.weight(1f))
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -134,14 +173,16 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
                 OutlinedButton(
                     onClick = { Toast.makeText(context, "Coming soon!", Toast.LENGTH_SHORT).show() },
                     modifier = Modifier.weight(1f),
-                    shape = MaterialTheme.shapes.medium
+                    shape = MaterialTheme.shapes.medium,
+                    enabled = !isLoading
                 ) {
                     Text("Google")
                 }
                 OutlinedButton(
                     onClick = { Toast.makeText(context, "Coming soon!", Toast.LENGTH_SHORT).show() },
                     modifier = Modifier.weight(1f),
-                    shape = MaterialTheme.shapes.medium
+                    shape = MaterialTheme.shapes.medium,
+                    enabled = !isLoading
                 ) {
                     Text("Facebook")
                 }
@@ -149,7 +190,7 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            TextButton(onClick = onBackToLogin) {
+            TextButton(onClick = onBackToLogin, enabled = !isLoading) {
                 Text("Already have an account? Login")
             }
         }
