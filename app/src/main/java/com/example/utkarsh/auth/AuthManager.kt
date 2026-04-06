@@ -1,7 +1,7 @@
 package com.example.utkarsh.auth
 
-import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
@@ -49,6 +49,18 @@ class AuthManager {
                     onResult(true, null)
                 } else {
                     onResult(false, task.exception?.localizedMessage ?: "Failed to send reset email")
+                }
+            }
+    }
+
+    fun signInWithGoogle(idToken: String, onResult: (Boolean, String?) -> Unit) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    onResult(true, null)
+                } else {
+                    onResult(false, task.exception?.localizedMessage ?: "Google sign in failed")
                 }
             }
     }

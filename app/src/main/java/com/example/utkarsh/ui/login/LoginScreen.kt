@@ -1,6 +1,8 @@
 package com.example.utkarsh.ui.login
 
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -18,6 +20,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.utkarsh.auth.AuthManager
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 
 @Composable
 fun LoginScreen(
@@ -31,6 +36,29 @@ fun LoginScreen(
     var isLoading by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val authManager = remember { AuthManager() }
+
+    // Google Sign-In Launcher
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            account?.idToken?.let { idToken ->
+                isLoading = true
+                authManager.signInWithGoogle(idToken) { success, error ->
+                    isLoading = false
+                    if (success) {
+                        onLoginSuccess()
+                    } else {
+                        errorMessage = error
+                    }
+                }
+            }
+        } catch (e: ApiException) {
+            errorMessage = "Google Sign-In failed: ${e.message}"
+        }
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -67,7 +95,6 @@ fun LoginScreen(
                 )
             }
 
-            // Email Input
             OutlinedTextField(
                 value = email,
                 onValueChange = { 
@@ -83,7 +110,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Password Input
             OutlinedTextField(
                 value = password,
                 onValueChange = { 
@@ -99,7 +125,6 @@ fun LoginScreen(
                 enabled = !isLoading
             )
 
-            // Forgot Password
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
@@ -111,7 +136,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Login Button
             Button(
                 onClick = { 
                     isLoading = true
@@ -143,7 +167,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Social Login Divider
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -160,13 +183,19 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Social Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 OutlinedButton(
-                    onClick = { Toast.makeText(context, "Google Sign-In integration in progress", Toast.LENGTH_SHORT).show() },
+                    onClick = { 
+                        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                            .requestIdToken("YOUR_WEB_CLIENT_ID_HERE") // Get this from Firebase Console
+                            .requestEmail()
+                            .build()
+                        val googleSignInClient = GoogleSignIn.getClient(context, gso)
+                        googleSignInLauncher.launch(googleSignInClient.signInIntent)
+                    },
                     modifier = Modifier.weight(1f),
                     shape = MaterialTheme.shapes.medium,
                     enabled = !isLoading
@@ -185,7 +214,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Sign Up Link
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
