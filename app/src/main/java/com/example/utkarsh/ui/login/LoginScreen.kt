@@ -1,8 +1,6 @@
 package com.example.utkarsh.ui.login
 
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -12,17 +10,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.utkarsh.R
 import com.example.utkarsh.auth.AuthManager
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
 
 @Composable
 fun LoginScreen(
@@ -34,31 +30,7 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
-    val context = LocalContext.current
     val authManager = remember { AuthManager() }
-
-    // Google Sign-In Launcher
-    val googleSignInLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-        try {
-            val account = task.getResult(ApiException::class.java)
-            account?.idToken?.let { idToken ->
-                isLoading = true
-                authManager.signInWithGoogle(idToken) { success, error ->
-                    isLoading = false
-                    if (success) {
-                        onLoginSuccess()
-                    } else {
-                        errorMessage = error
-                    }
-                }
-            }
-        } catch (e: ApiException) {
-            errorMessage = "Google Sign-In failed: ${e.message}"
-        }
-    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -71,6 +43,15 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            // Displaying the logo using the foreground vector instead of mipmap
+            Image(
+                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                contentDescription = "App Logo",
+                modifier = Modifier
+                    .size(100.dp)
+                    .padding(bottom = 16.dp)
+            )
+
             Text(
                 text = "Utkarsh",
                 fontSize = 42.sp,
@@ -136,6 +117,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Login Button
             Button(
                 onClick = { 
                     isLoading = true
@@ -167,53 +149,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                HorizontalDivider(modifier = Modifier.weight(1f))
-                Text(
-                    text = " OR ",
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
-                )
-                HorizontalDivider(modifier = Modifier.weight(1f))
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { 
-                        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                            .requestIdToken("YOUR_WEB_CLIENT_ID_HERE") // Get this from Firebase Console
-                            .requestEmail()
-                            .build()
-                        val googleSignInClient = GoogleSignIn.getClient(context, gso)
-                        googleSignInLauncher.launch(googleSignInClient.signInIntent)
-                    },
-                    modifier = Modifier.weight(1f),
-                    shape = MaterialTheme.shapes.medium,
-                    enabled = !isLoading
-                ) {
-                    Text("Google")
-                }
-                OutlinedButton(
-                    onClick = { Toast.makeText(context, "Coming soon!", Toast.LENGTH_SHORT).show() },
-                    modifier = Modifier.weight(1f),
-                    shape = MaterialTheme.shapes.medium,
-                    enabled = !isLoading
-                ) {
-                    Text("Facebook")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
+            // Sign Up Link
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
